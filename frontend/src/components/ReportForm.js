@@ -12,16 +12,35 @@ function ReportForm() {
     setLoading(true);
     setResult(null);
 
-    // Fake AI response for now (will connect to real API later)
-    setTimeout(() => {
-      setResult({
-        issue_type: "Blocked monsoon drain",
-        urgency: "Urgent",
-        description: "Severe blockage detected in drainage system. High risk of flooding during heavy rain.",
-        recommended_department: "Drainage & Irrigation Department (DID)",
-      });
-      setLoading(false);
-    }, 2000);
+try {
+  const formData = new FormData();
+  if (image) formData.append("image", image);
+  formData.append("description", description);
+  formData.append("location", location);
+
+  const response = await fetch("https://elderly-suspense-treachery.ngrok-free.dev/api/classify", {
+    method: "POST",
+    headers: { "ngrok-skip-browser-warning": "true" },
+    body: formData,
+  });
+
+  const data = await response.json();
+  setResult({
+    issue_type: data.issue_type,
+    urgency: data.urgency === "high" ? "Urgent" : data.urgency === "medium" ? "Medium" : "Low",
+    description: data.description,
+    recommended_department: data.recommended_department,
+  });
+} catch (error) {
+  setResult({
+    issue_type: "Connection error",
+    urgency: "Low",
+    description: "Could not reach the backend. Make sure Person A's server is running.",
+    recommended_department: "N/A",
+  });
+} finally {
+  setLoading(false);
+}
   };
 
   const urgencyColor = {
